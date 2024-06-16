@@ -50,4 +50,16 @@ Instructions that take multiple form of operands, like MOV are written on Instru
 | HALT     | 0      | Stop Execution                       | no             | Halt the execution | no       |
 | Reserved | [1:20] | Reserved Instructions                | no             | no                 | no       |
 | ADD      | 21     | Add value to register/address/symbol | add            | add value          | no       |
-# UML Diagram
+
+
+# Code Implementation
+Referene about the python implementation i made for this cpu
+
+## Memory class
+Store and handle the cpu memory
+
+## Symbol Table class
+Store and handle the symbols data
+
+## Assembler
+Convert use assembly into binary representation

@@ -2,6 +2,43 @@ from typing import List, Dict
 from Dbg import dbg, dbgassert
 from CPU import Register, Symbol, Instructions, Instruction, Operand
 from Memory import Memory, Segment
+from SymbolMap import SymbolMap
+
+
+class BlockParser:
+    """Parse a assembly file into blocks 
+    """
+    def __init__(self, filein):
+        self.Blocks :List[List[str]] = [] # A block is just a list of instructions
+        self.fileint = filein
+        self.filedata :List[str] = self.parse_blocks(filein)
+        
+    def parse_blocks(self, filein):
+        try:
+            with open(filein, 'r') as file:
+                lines = file.readlines()
+                
+                blocks = []
+                current_block = []
+
+                for line in lines:
+                    if not line.strip():
+                        if current_block:
+                            blocks.append(current_block)
+                            current_block = []
+                    else:
+                        current_block.append(line.strip())
+
+                # Add the last block if there is one
+                if current_block:
+                    blocks.append(current_block)
+
+                self.Blocks = blocks
+                file.close()
+        except FileNotFoundError:
+            print(f"The file {filein} is not in scope.")
+            exit()
+
 class Assembler:
     def __init__(self, microcode) -> None:
         """Create a new Assembler object
@@ -13,8 +50,31 @@ class Assembler:
         self.symbol_table :Dict[str, List[int, int]] = {} # symbol table stores the name of the symbol + the type and place in memory
         self.memory = Memory()
         self.is_symbol_table_ready = False
-        self.tokenizer(microcode)    
+        self.parser = BlockParser(microcode)
+        self.symbol_map = SymbolMap(self.memory)
+        self.process_blocks()
+        #self.tokenizer(microcode)    
+
+    def strip_comments(self, block :List[str]):
+        ret = []
+        for line in block:
+            if line[0] != ";" and ";" in line:
+                line = line.split(";")[0]
+            elif line[0] == ";":
+                continue
+            ret.append(line)
+        return ret
     
+    def populate_symbol_table(self, blocks):
+        
+    
+    def process_blocks(self):
+        for block in self.parser.Blocks:
+            block = self.strip_comments(block)
+            
+        self.populate_symbol_table(self.parser.Blocks)
+            
+            
     """ Each line of the file is delimited by a space and checked if it is empty, then passed to the token parser. """
     def tokenizer(self, fn):
         try:
