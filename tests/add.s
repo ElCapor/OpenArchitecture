@@ -1,1 +1,4 @@
-HALT x0 , 12
+JMP start
+
+start:
+    HALT

@@ -1,5 +1,6 @@
 from typing import List, Dict
 from enum import Enum
+from Dbg import dbg, dbgassert
 
 class Segment(Enum):
     STACK,DATA,CODE = range(0,3)
@@ -8,7 +9,7 @@ class Segment(Enum):
 class Stack:
     def __init__(self, size :int):
         self.size = size
-        self.memory : Dict[int, int] = {}
+        self.memory : List[int] = [0 for i in range(0, size)]
     
     def __getitem__(self, index :int):
         if (index >= 0 and index < self.size):
@@ -26,10 +27,21 @@ class Stack:
 class DataSegment:
     def __init__(self, size :int):
         self.size = size
+        self.memory :List[int] = [0 for i in range(0, size)]
     
-    def __getitem__(self, index :int):
-        if (index >= 0 and index < self.size):
-            return self.memory[index]
+    def __getitem__(self, index :int | slice):
+        if isinstance(index, slice):
+            if (index.step and index.step > 1):
+                raise IndexError()
+            if (index.start >= 0 and index.stop < self.size):
+                return self.memory[index]
+            else:
+                raise IndexError()
+        elif isinstance(index, int):
+            if (index >= 0 and index < self.size):
+                return self.memory[index]
+            else:
+                raise IndexError()
         else:
             raise IndexError()
     
@@ -42,6 +54,7 @@ class DataSegment:
 class CodeSegment:
     def __init__(self, size :int):
         self.size = size
+        self.memory :List[int] = [0 for i in range(0, size)]
     
     def __getitem__(self, index :int):
         if (index >= 0 and index < self.size):
@@ -60,6 +73,9 @@ class Memory:
         self.stack = Stack(stack_size)
         self.data = DataSegment(data_size)
         self.code = CodeSegment(code_size)
+        self.stack_selector = 0
+        self.data_selector = 0
+        self.code_selector = 0
     
     def __getitem__(self, segment :Segment) -> Stack | DataSegment | CodeSegment:
         match segment:
@@ -71,7 +87,7 @@ class Memory:
                 return self.code
         raise IndexError()
     
-    def __setitem__(self, segment :Segment, value :List[int,int]) -> None:
+    def __setitem__(self, segment :Segment, value :List[int]) -> None:
         match segment:
             case Segment.STACK:
                 self.stack.__setitem__(value[0], value[1])
@@ -79,5 +95,35 @@ class Memory:
                 self.data.__setitem__(value[0], value[1])
             case Segment.CODE:
                 self.code.__setitem__(value[0], value[1])
-        raise IndexError()
+                    
+    def write(self, segment :Segment, index :int, value :int):
+        self.__setitem__(segment, [index, value])
+    
+    def write_array(self, segment :Segment, index :int, values :List[int]):
+        idx = index
+        for value in values:
+            self.write(segment, idx, value)
+            idx+=1
         
+    def read(self, segment :Segment, index: int) -> int:
+        return self.__getitem__(segment)[index]
+    
+    def read_array(self, segment :Segment, index :int, size :int) -> List[int]:
+        return self.__getitem__(segment)[index:index+size]
+    # returns a location in the given segment that has enough size
+    def _alloc(self, segment :Segment, size :int):
+        block = [0 for i in range(0, size)] # search block by blocks
+        selector = self.stack_selector if segment == Segment.STACK else self.data_selector if segment == Segment.DATA else self.code_selector
+        current_segment = self.stack if segment == Segment.STACK else self.data if segment == Segment.DATA else self.code
+        while not self.read_array(segment, selector, size) == block:
+            dbg(f" Reading block at index {selector}, searching for {block}, got {self.read_array(segment, selector, size)}")
+            selector += 1
+            if selector + size > current_segment.size:
+                dbg("Buffer overflow be careful ", selector)
+                break
+        return selector
+    
+def UnitTestMemory():
+    mem :Memory = Memory()
+    mem.write_array(Segment.DATA, 0, [10, 30, 45, 78])
+    print(mem._alloc(Segment.DATA, 5))

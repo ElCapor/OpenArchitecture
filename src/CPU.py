@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum, auto, IntFlag
 from typing import List
 from Dbg import dbgassert
 class Register(Enum):
@@ -8,8 +8,13 @@ class Register(Enum):
 class Symbol(Enum):
     LABEL, BYTE, SHORT, INTEGER, DOUBLE, STRING = range(0,6)
 
-class Operand(Enum):
-    REGISTER, INTEGER, VALUE, ADDRESS, SYMBOL = range(0, 5)
+class Operand(IntFlag):
+    REGISTER = 1 << 0  # 1
+    INTEGER  = 1 << 1  # 2
+    VALUE    = 1 << 2  # 4
+    ADDRESS  = 1 << 3  # 8
+    SYMBOL   = 1 << 4  # 16
+    ALL = REGISTER | INTEGER | VALUE | ADDRESS | SYMBOL
     
 class Instruction:
     def __init__(self, nargs :int = 0, operand_types :List[Operand] = []):
@@ -22,8 +27,9 @@ class Instruction:
         self.size = 1 + nargs
         self.nargs = nargs
         self.operand_types = operand_types
-        dbgassert(len(self.operand_types) == nargs, "You must specify operand types")
+        dbgassert(len(self.operand_types) == nargs, "You must specify allowed operand types")
     
 class Instructions(Enum):
     HALT = Instruction()
     JMP = Instruction(1, [Operand.SYMBOL])
+    MOV = Instruction(2, [Operand.ALL, Operand.ALL])
