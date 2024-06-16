@@ -43,8 +43,7 @@ General Purpose Registers
 ## CPU Instructions
 Internal means that the instruction is not accessible to the user. For example, all the MOV** Instructions are just compile time generated instructions when you write MOV op1, op2
 
-Note 1 : MOVA* instructions only support symbols for now, but soon it will support manual addresses through specialized registers
-
+Instructions that take multiple form of operands, like MOV are written on Instruction.size + nargs*2 bytes, the first byte is the opcode , the next nargs opcodes specify the type of operand that was passed, and the next nargs bytes contains the arguments
 
 | Name     | Index  | Description                          | x86 equivalent | Usage              | Internal |
 | -------- | ------ | ------------------------------------ | -------------- | ------------------ | -------- |
