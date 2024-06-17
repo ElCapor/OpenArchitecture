@@ -123,6 +123,19 @@ class Memory:
                 break
         return selector
     
+    def _reserve(self, segment :Segment, size :int) -> int:
+        """Allocate and reserve a memory block for later usage
+
+        Args:
+            segment (Segment): the target segment
+            size (int): size of the block
+        Returns:
+            The reserved location
+        """
+        block = self._alloc(segment, size)
+        self.write_array(segment, block, [0xCC for i in range(size)]) # OxCC means the block is reserved
+        return block
+    
 def UnitTestMemory():
     mem :Memory = Memory()
     mem.write_array(Segment.DATA, 0, [10, 30, 45, 78])

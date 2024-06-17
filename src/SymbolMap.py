@@ -8,10 +8,10 @@ class SymbolMap():
     def __init__(self, mem :Memory) -> None:
         self.mem = mem
         # store the location of each symbol inside memory
-        self.symbol_table :Dict[str, int]
+        self.symbol_table :Dict[str, int] = {}
         # store the type of each symbol
-        self.symbol_type :Dict[str, Symbol]
-    
+        self.symbol_type :Dict[str, Symbol] = {}
+        
     def get_symbol(self, name :str):
         if name not in self.symbol_table or name not in self.symbol_type:
             dbg("Symbol not found ", name)
@@ -35,4 +35,23 @@ class SymbolMap():
             name (str): name of the symbol
             value (int | str): value of the symbol
         """
-        pass
+        match symtype:
+            case Symbol.INTEGER | Symbol.SHORT | Symbol.BYTE:
+                location = self.mem._alloc(Segment.DATA, 1)
+                self.symbol_type[name] = symtype
+                self.symbol_table[name] = location
+                self.mem[Segment.DATA][location] = value
+            case Symbol.DOUBLE:
+                location = self.mem._alloc(Segment.DATA, 2)
+                self.symbol_type[name] = symtype
+                self.symbol_table[name] = location
+                self.mem[Segment.DATA][location] = value
+            case Symbol.STRING:
+                dbg("Not ready yet")
+            
+            # the caller will provide us with the location inside code segment
+            case Symbol.LABEL:
+                self.symbol_type[name] = symtype
+                self.symbol_table[name] = value
+            
+                

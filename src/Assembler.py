@@ -65,16 +65,56 @@ class Assembler:
             ret.append(line)
         return ret
     
-    def populate_symbol_table(self, blocks):
+    def tokenize_line(self, line):
+        return line.strip().replace("\t", ' ').split(' ')
+    
+    def check_d_type(self, token :str):
+        return token in ["db", "ds", "di", "dd", "dc"]
+    
+    def typ2symbol(self, typ :str):
+        if typ == "db":
+            return Symbol.BYTE
+        elif typ == "ds":
+            return Symbol.SHORT
+        elif typ == "di":
+            return Symbol.INTEGER
+        elif typ == "dd":
+            return Symbol.DOUBLE
+        elif typ == "dc":
+            return Symbol.STRING
+        else:
+            raise NotImplementedError()
+    
+    def populate_symbol_table(self, block):
+        islabel = False # if it's a label every line under it is an instruction
+        if self.is_symbol_declaration(self.tokenize_line(block[0])[0]) and len(self.tokenize_line(block[0])) == 1:
+            islabel = True
+            
+        for line in block:
+            if islabel:
+                pass
+            else:
+                tokens = self.tokenize_line(line)
+                dbg(tokens)
+                sym_name = tokens[0]
+                if self.is_symbol_declaration(sym_name):
+                    typ = tokens[1]
+                    if self.check_d_type(typ):
+                        sym :Symbol = self.typ2symbol(typ)
+                        value :str= tokens[2]
+                        if value.startswith("0x"):
+                            value = int(value, 16)
+                        self.symbol_map.add_symbol(sym, sym_name[0:-1], int(value))
         
+                    
+                
+                        
     
     def process_blocks(self):
         for block in self.parser.Blocks:
             block = self.strip_comments(block)
-            
-        self.populate_symbol_table(self.parser.Blocks)
-            
-            
+            self.populate_symbol_table(block)
+        dbg(self.symbol_map.symbol_table)            
     """ Each line of the file is delimited by a space and checked if it is empty, then passed to the token parser. """
     def tokenizer(self, fn):
         try:
