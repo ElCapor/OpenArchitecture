@@ -3,3 +3,4 @@ site_name: OpenArchitecture Reference
 nav:
   - Home: 'index.md'
   - Reference: 'Reference.md'
+  - Assembling Pipeline: 'Assembling.md'

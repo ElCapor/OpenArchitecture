@@ -11,7 +11,10 @@ class SymbolMap():
         self.symbol_table :Dict[str, int] = {}
         # store the type of each symbol
         self.symbol_type :Dict[str, Symbol] = {}
-        
+    
+    def get_symbol_index(self, name :str) -> int:
+        return list(self.symbol_table.keys()).index(str)
+    
     def get_symbol(self, name :str):
         if name not in self.symbol_table or name not in self.symbol_type:
             dbg("Symbol not found ", name)

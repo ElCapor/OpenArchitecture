@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Type
 from Dbg import dbg, dbgassert
 from CPU import Register, Symbol, Instructions, Instruction, Operand
 from Memory import Memory, Segment
@@ -84,15 +84,62 @@ class Assembler:
             return Symbol.STRING
         else:
             raise NotImplementedError()
+    def is_value(self, token :str):
+        return token[0] == "[" and token[-1] == "]"
     
+    def is_symbol(self, token :str):
+        return token in self.symbol_map.symbol_table
+    
+    def token2symboltype(self, token :str):
+        return self.symbol_map.symbol_type[token]
+    
+    def token2type(self, token :str) -> None | Operand:
+        if self.is_register(token):
+            return Operand.REGISTER
+        elif self.is_symbol(token):
+            if self.is_value(token):
+                return Operand.VALUE
+            else:
+                match self.token2symboltype(token):
+                    case Symbol.LABEL:
+                        return Operand.SYMBOL
+                    case Symbol.BYTE | Symbol.INTEGER | Symbol.SHORT | Symbol.DOUBLE | Symbol.STRING:
+                        return Operand.ADDRESS
+        elif token.isdigit():
+            return Operand.INTEGER
+        else:
+            return None
+    # return the memory location
+    def parse_code_block(self, block :List[str]) -> int:
+        opcodes = [] #  opcodes of the current block
+        for line in block:
+            tokens = self.tokenize_line(line)
+            tokens = self.remove_comma(tokens)
+            inst :Instruction= self.token2instruction(tokens[0])
+            dbgassert((len(tokens) -1) == inst.nargs, f"Instruction {tokens[0]} expected {inst.nargs} arguments, but only {len(tokens) - 1} were given")
+            if len(tokens) > 1:
+                for i in range(1, len(tokens)):
+                    typ = self.token2type(tokens[i])
+                    if typ.value & inst.operand_types[i-1]:
+                        pass
+                    else:
+                        dbg(f"Have type {typ}, expected {inst.operand_types[i-1]}")
+            else:
+                return
+        
+        
     def populate_symbol_table(self, block):
         islabel = False # if it's a label every line under it is an instruction
         if self.is_symbol_declaration(self.tokenize_line(block[0])[0]) and len(self.tokenize_line(block[0])) == 1:
             islabel = True
             
+        if islabel:
+            self.symbol_map.add_symbol(Symbol.LABEL, block[0][0:-1], -1) # -1 because not initialized yet
+
         for line in block:
             if islabel:
-                pass
+                location = self.parse_code_block(block[1:])
+                return
             else:
                 tokens = self.tokenize_line(line)
                 dbg(tokens)
@@ -112,9 +159,11 @@ class Assembler:
     
     def process_blocks(self):
         for block in self.parser.Blocks:
+            dbg(block)
             block = self.strip_comments(block)
             self.populate_symbol_table(block)
-        dbg(self.symbol_map.symbol_table)            
+        dbg(self.symbol_map.symbol_table)     
+               
     """ Each line of the file is delimited by a space and checked if it is empty, then passed to the token parser. """
     def tokenizer(self, fn):
         try:

@@ -3,6 +3,7 @@ from typing import List
 from Dbg import dbgassert
 class Register(Enum):
     PC, AR, ST, SB, FT, FB, DS, DE, CT, CB = range(0,10)
+    x0,x1,x2 = range(10, 13)
 
 # symbol type
 class Symbol(Enum):
@@ -26,7 +27,7 @@ class Instruction:
         """
         self.size = 1 + nargs
         self.nargs = nargs
-        self.operand_types = operand_types
+        self.operand_types : List[Operand]= operand_types
         dbgassert(len(self.operand_types) == nargs, "You must specify allowed operand types")
     
 class Instructions(Enum):
