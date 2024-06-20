@@ -52,6 +52,7 @@ class Assembler:
         self.is_symbol_table_ready = False
         self.parser = BlockParser(microcode)
         self.symbol_map = SymbolMap(self.memory)
+        self.code_blocks_queued :List[int] = [] # the queued code blocks to treat
         self.process_blocks()
         #self.tokenizer(microcode)    
 
@@ -129,34 +130,23 @@ class Assembler:
         
         
     def populate_symbol_table(self, block):
-        islabel = False # if it's a label every line under it is an instruction
         if self.is_symbol_declaration(self.tokenize_line(block[0])[0]) and len(self.tokenize_line(block[0])) == 1:
-            islabel = True
-            
-        if islabel:
             self.symbol_map.add_symbol(Symbol.LABEL, block[0][0:-1], -1) # -1 because not initialized yet
+            return
 
         for line in block:
-            if islabel:
-                location = self.parse_code_block(block[1:])
-                return
-            else:
-                tokens = self.tokenize_line(line)
-                dbg(tokens)
-                sym_name = tokens[0]
-                if self.is_symbol_declaration(sym_name):
-                    typ = tokens[1]
-                    if self.check_d_type(typ):
-                        sym :Symbol = self.typ2symbol(typ)
-                        value :str= tokens[2]
-                        if value.startswith("0x"):
-                            value = int(value, 16)
-                        self.symbol_map.add_symbol(sym, sym_name[0:-1], int(value))
-        
+            tokens = self.tokenize_line(line)
+            dbg(tokens)
+            sym_name = tokens[0]
+            if self.is_symbol_declaration(sym_name):
+                typ = tokens[1]
+                if self.check_d_type(typ):
+                    sym :Symbol = self.typ2symbol(typ)
+                    value :str= tokens[2]
+                    if value.startswith("0x"):
+                        value = int(value, 16)
+                    self.symbol_map.add_symbol(sym, sym_name[0:-1], int(value))
                     
-                
-                        
-    
     def process_blocks(self):
         for block in self.parser.Blocks:
             dbg(block)
