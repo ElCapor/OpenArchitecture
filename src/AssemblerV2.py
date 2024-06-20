@@ -85,7 +85,7 @@ class AssemblerV2:
     
     def guess_block_types(self):
         for i, block in enumerate(self.parser.blocks):
-            dbg(block)
+            #dbg(block)
             self.tokenize_line(block[0])[0]
             if self.is_symbol_declaration(self.tokenize_line(block[0])[0]):
                 if len(self.tokenize_line(block[0])) > 1:
@@ -140,18 +140,125 @@ class AssemblerV2:
             elif self.blocktypes[i] == BlockType.DATA:
                 self.process_data_block(block)
 
+    def remove_comma(self, tokens :List[str]) -> List[str]:
+        ret = []
+        for token in tokens:
+            if token== ",":
+                pass
+            elif token[-1] == ",": # a single comma can trigger this too , so we supress it first
+                ret.append(token[:-1])
+            else:
+                ret.append(token)
+        return ret
+    
+    def token2instruction(self, token :str) -> Instruction:
+        for tType in Instructions:
+            if tType.name == token:
+                return tType.value
+        raise IndexError()
+    
+    def instruction2name(self, inst :Instruction) -> str:
+        for tType in Instructions:
+            if tType.value == inst:
+                return tType.name
+        raise IndexError()
+    
+    def instruction2opcode(self, inst :str) -> int:
+        idx :int = 0
+        for tType in Instructions:
+            if tType.name == inst:
+                return idx
+            idx += 1
+    
+    def is_register(self, token :str):
+        for tType in Register:
+            if tType.name == token:
+                return True
+        return False
+    
+    def is_value(self, token :str):
+        return token[0] == "[" and token[-1] == "]"
+    
+    def is_symbol(self, token :str):
+        return token in self.symbol_map.symbol_table
+    
+    def token2symboltype(self, token :str):
+        return self.symbol_map.symbol_type[token]
+    
+    def token2type(self, token :str) -> None | Operand:
+        if self.is_register(token):
+            return Operand.REGISTER
+        elif self.is_symbol(token):
+            if self.is_value(token):
+                return Operand.VALUE
+            else:
+                match self.token2symboltype(token):
+                    case Symbol.LABEL:
+                        return Operand.SYMBOL
+                    case Symbol.BYTE | Symbol.INTEGER | Symbol.SHORT | Symbol.DOUBLE | Symbol.STRING:
+                        return Operand.ADDRESS
+        elif token.isdigit():
+            return Operand.INTEGER
+        else:
+            return None
+    
+    def arg2opcode(self, typ :Operand, value :str) -> int:
+        match typ:
+            case Operand.REGISTER:
+                return Register.from_name(value).index()
+            case Operand.INTEGER:
+                if value.startswith("0x"):
+                    return int(value, 16)
+                else:
+                    return int(value)
+            case Operand.VALUE:
+                return self.symbol_map.get_symbol_index(value[1:-1])
+            case Operand.ADDRESS: # i should add support for manual memory addresses in case u want to add a flag or unmanaged memory space
+                return self.symbol_map.get_symbol_index(value)
+            case Operand.SYMBOL:
+                return self.symbol_map.get_symbol_index(value)
+                
+    
     # convert a block into a list of opcodes and instructions
     def block2opcode(self, block :List[str]) -> List[int]:
+        opcodes = []
         for i,line in enumerate(block):
-            pass
+            tokens = self.tokenize_line(line)
+            tokens = self.remove_comma(tokens)
+            dbg(tokens)
+            inst :Instruction = self.token2instruction(tokens[0])
+            dbgassert((len(tokens) -1) == inst.nargs, f"Instruction {tokens[0]} expected {inst.nargs} arguments, but only {len(tokens) - 1} were given")
+            if len(tokens) > 1:
+                opcodes.append(self.instruction2opcode(tokens[0]))
+                argtypes = []
+                argvalues = []
+                # argument checker and operand type writing
+                for j in range(1, len(tokens)):
+
+                    typ :Operand = self.token2type(tokens[j])
+                    if typ.value & inst.operand_types[j-1]:
+                        #dbg("Type check is cool asf today")
+                        argtypes.append(typ.value)
+                        argvalues.append(self.arg2opcode(typ, tokens[j]))
+                        
+                opcodes.extend(argtypes)
+                opcodes.extend(argvalues)
+            else:
+                opcodes.append(self.instruction2opcode(tokens[0]))
+                
+            return opcodes
+
         
     def process_code_blocks(self):
         for i, block in enumerate(self.parser.blocks):
             if self.blocktypes[i] == BlockType.LABEL:
                 label_name = self.tokenize_line(block[0])[:-1]
-                
+                opcodes = self.block2opcode(block[1:])
+                dbg(opcodes)
                 pass
             elif self.blocktypes[i] == BlockType.CODE:
+                opcodes = self.block2opcode(block)
+                dbg(opcodes)
                 pass
             else:
                 pass
@@ -159,11 +266,14 @@ class AssemblerV2:
     def process_blocks(self):
         self.guess_block_types()
         self.process_symbol_blocks()
+        self.process_code_blocks()
+        """
         dbg(self.parser.blocks)
         dbg(self.blocktypes)
         dbg(self.symbol_map.symbol_table)
         for symbol in self.symbol_map.symbol_table:
             dbg(self.symbol_map.get_symbol_name_from_index(self.symbol_map.get_symbol_index(symbol)))
+        """
         
         
 import sys

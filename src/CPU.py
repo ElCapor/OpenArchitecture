@@ -4,6 +4,17 @@ from Dbg import dbgassert
 class Register(Enum):
     PC, AR, ST, SB, FT, FB, DS, DE, CT, CB = range(0,10)
     x0,x1,x2 = range(10, 13)
+    
+    def index(self):
+        return list(Register).index(self)
+    
+    @staticmethod
+    def from_index(index):
+        return list(Register)[index]
+    
+    @staticmethod
+    def from_name(name):
+        return Register[name]
 
 # symbol type
 class Symbol(Enum):
