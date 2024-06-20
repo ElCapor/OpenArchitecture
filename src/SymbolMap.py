@@ -13,7 +13,14 @@ class SymbolMap():
         self.symbol_type :Dict[str, Symbol] = {}
     
     def get_symbol_index(self, name :str) -> int:
-        return list(self.symbol_table.keys()).index(str)
+        return list(self.symbol_table.keys()).index(name)
+    
+    def get_symbol_name_from_index(self, index :int) -> int:
+        try:
+            return list(self.symbol_table.keys())[index]
+        except IndexError:
+            print(f"Failed to get symbol by index {index}")
+            exit()
     
     def get_symbol(self, name :str):
         if name not in self.symbol_table or name not in self.symbol_type:

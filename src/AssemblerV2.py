@@ -99,15 +99,52 @@ class AssemblerV2:
             else:
                 print(f"Unknown block type {i}")
                 exit()
-                          
+    
+    def symbol_type_to_symbol(self, typ :str):
+        if typ == "db":
+            return Symbol.BYTE
+        elif typ == "ds":
+            return Symbol.SHORT
+        elif typ == "di":
+            return Symbol.INTEGER
+        elif typ == "dd":
+            return Symbol.DOUBLE
+        elif typ == "dc":
+            return Symbol.STRING
+        else:
+            raise NotImplementedError()
+    
+    def is_symbol_type(self, typ :str):
+        return typ in ["db", "di", "dd", "dc", "ds"]
+    
+    def process_data_block(self, block :str):
+        for i, line in enumerate(block):
+           tokens = self.tokenize_line(line)
+           sym_name = tokens[0]
+           if self.is_symbol_declaration(sym_name):
+            try:
+                typ = tokens[1]
+                if self.is_symbol_type(typ):
+                    sym :Symbol = self.symbol_type_to_symbol(typ)
+                    value :str = tokens[2]
+                    if value.startswith("0x"):
+                        value = int(value, 16)
+                    self.symbol_map.add_symbol(sym, sym_name[0:-1], int(value))
+            except IndexError:
+                print(f"Symbol {sym_name} was declared incorrectly")
+                
     def process_symbol_blocks(self):
         for i, block in enumerate(self.parser.blocks):
             if self.blocktypes[i] == BlockType.LABEL:
                 self.symbol_map.add_symbol(Symbol.LABEL, self.tokenize_line(block[0])[0][:-1], -1)
             elif self.blocktypes[i] == BlockType.DATA:
-                pass
+                self.process_data_block(block)
 
-                
+    # convert a block into a list of opcodes and instructions
+    def block2opcode(self, block :List[str]) -> List[int]:
+        for i,line in enumerate(block):
+            pass
+        
     def process_code_blocks(self):
         for i, block in enumerate(self.parser.blocks):
             if self.blocktypes[i] == BlockType.LABEL:
@@ -125,6 +162,9 @@ class AssemblerV2:
         dbg(self.parser.blocks)
         dbg(self.blocktypes)
         dbg(self.symbol_map.symbol_table)
+        for symbol in self.symbol_map.symbol_table:
+            dbg(self.symbol_map.get_symbol_name_from_index(self.symbol_map.get_symbol_index(symbol)))
+        
         
 import sys
 import argparse
