@@ -36,7 +36,10 @@ class SymbolMap():
             # all of these are stored in data segment
             case Symbol.INTEGER | Symbol.SHORT | Symbol.DOUBLE | Symbol.BYTE | Symbol.STRING:
                 return self.mem[Segment.DATA][location]
-            
+    
+    def update_symbol(self, name :str, newvalue : int):
+        self.symbol_table[name] = newvalue
+    
     def add_symbol(self, symtype :Symbol, name :str, value :int | str):
         """Add a new symbol into the symbol table, if it's a label the value will be equal to the size of the block, that way we can correctly allocate size for it
 

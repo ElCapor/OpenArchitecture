@@ -11,9 +11,19 @@ class Stack:
         self.size = size
         self.memory : List[int] = [0 for i in range(0, size)]
     
-    def __getitem__(self, index :int):
-        if (index >= 0 and index < self.size):
-            return self.memory[index]
+    def __getitem__(self, index :int | slice):
+        if isinstance(index, slice):
+            if (index.step and index.step > 1):
+                raise IndexError()
+            if (index.start >= 0 and index.stop < self.size):
+                return self.memory[index]
+            else:
+                raise IndexError()
+        elif isinstance(index, int):
+            if (index >= 0 and index < self.size):
+                return self.memory[index]
+            else:
+                raise IndexError()
         else:
             raise IndexError()
     
@@ -56,9 +66,19 @@ class CodeSegment:
         self.size = size
         self.memory :List[int] = [0 for i in range(0, size)]
     
-    def __getitem__(self, index :int):
-        if (index >= 0 and index < self.size):
-            return self.memory[index]
+    def __getitem__(self, index :int | slice):
+        if isinstance(index, slice):
+            if (index.step and index.step > 1):
+                raise IndexError()
+            if (index.start >= 0 and index.stop < self.size):
+                return self.memory[index]
+            else:
+                raise IndexError()
+        elif isinstance(index, int):
+            if (index >= 0 and index < self.size):
+                return self.memory[index]
+            else:
+                raise IndexError()
         else:
             raise IndexError()
     

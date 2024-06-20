@@ -252,12 +252,17 @@ class AssemblerV2:
     def process_code_blocks(self):
         for i, block in enumerate(self.parser.blocks):
             if self.blocktypes[i] == BlockType.LABEL:
-                label_name = self.tokenize_line(block[0])[:-1]
+                label_name = self.tokenize_line(block[0])[0][:-1]
                 opcodes = self.block2opcode(block[1:])
+                location :int = self.memory._alloc(Segment.CODE, len(opcodes))
+                self.memory.write_array(Segment.CODE, location, opcodes)
+                self.symbol_map.update_symbol(label_name, location)
                 dbg(opcodes)
                 pass
             elif self.blocktypes[i] == BlockType.CODE:
                 opcodes = self.block2opcode(block)
+                location :int = self.memory._alloc(Segment.CODE, len(opcodes))
+                self.memory.write_array(Segment.CODE, location, opcodes)
                 dbg(opcodes)
                 pass
             else:
