@@ -21,6 +21,8 @@ class EmulatorV1:
     
     def execute(self, instruction):
         match instruction:
+            case Instructions.NONE:
+                self.is_halted = True
             case Instructions.HALT:
                 self.is_halted = True
                 
@@ -38,7 +40,9 @@ class EmulatorV1:
             self.regs[Register.AR] = self.regs[Register.PC]
         
     def cycle(self):
-        while input("stop ? ") != "stop" or not self.is_halted:
+        while input("stop ? ") != "stop":
+            if self.is_halted:
+                break
             inst :int = self.memory[Segment.CODE][self.regs[Register.AR]]
             dbg(f"Executing instruction {inst} at address {self.regs[Register.AR]}")
             inst :Enum[Instruction] = Instructions.from_index(inst)

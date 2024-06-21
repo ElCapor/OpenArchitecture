@@ -49,6 +49,7 @@ class Instructions(Enum):
             if index == 0: return tType
             else: index -= 1
             
+    NONE = Instruction()
     HALT = Instruction()
     JMP = Instruction(1, [Operand.SYMBOL])
     MOV = Instruction(2, [Operand.ALL, Operand.ALL])
