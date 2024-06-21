@@ -1,6 +1,6 @@
 from enum import Enum, auto, IntFlag
 from typing import List
-from Dbg import dbgassert
+from Dbg import dbgassert,dbg
 class Register(Enum):
     PC, AR, ST, SB, FT, FB, DS, DE, CT, CB = range(0,10)
     x0,x1,x2 = range(10, 13)
@@ -42,6 +42,37 @@ class Instruction:
         dbgassert(len(self.operand_types) == nargs, "You must specify allowed operand types")
     
 class Instructions(Enum):
+    
+    @staticmethod
+    def from_index(index :int) -> Instruction:
+        for tType in Instructions:
+            if index == 0: return tType
+            else: index -= 1
+            
     HALT = Instruction()
     JMP = Instruction(1, [Operand.SYMBOL])
     MOV = Instruction(2, [Operand.ALL, Operand.ALL])
+    
+
+class Flag(Enum):
+    S, ZF, PF, SF = range(0, 4)
+    
+class Flags:
+    def __init__(self):
+        self.flags :List[int] = [0 for i in range(0, len(Flag))]
+    
+    def __getitem__(self, flag :Flag) -> int:
+        return self.flags[flag.value]
+
+    def __setitem__(self, flag :Flag, value :int) -> int:
+        self.flags[flag.value] = value % (2**1)
+
+class Registers:
+    def __init__(self):
+        self.regs :List[int] = [0 for i in range(0, len(Register))]
+    
+    def __getitem__(self, register :Register) -> int:
+        return self.regs[register.value]
+
+    def __setitem__(self, register :Register, value :int) -> int:
+        self.regs[register.value] = value % (2**32)

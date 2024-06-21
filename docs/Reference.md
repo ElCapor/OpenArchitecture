@@ -30,7 +30,7 @@ General Purpose Registers
 | DS   | 6     | Symbols Region Start  | DS             | Store the index of the top of symbols region         |
 | DE   | 7     | Symbols Region End    | no             | Store the index of the bottom of symbols region      |
 | CT   | 8     | Code section top      | CS             | Store the top of the code memory region              |
-| CB   | 9    | Code section Bottom   | CS             | Store the bottom of the code memory region           |
+| CB   | 9     | Code section Bottom   | CS             | Store the bottom of the code memory region           |
 
 ## CPU Flags
 | Name | Index | Description | x86 equivalent  | Usage                                                                          |
@@ -50,6 +50,7 @@ Instructions that take multiple form of operands, like MOV are written on Instru
 | HALT     | 0      | Stop Execution                       | no             | Halt the execution | no       |
 | Reserved | [1:20] | Reserved Instructions                | no             | no                 | no       |
 | ADD      | 21     | Add value to register/address/symbol | add            | add value          | no       |
+| MOV      | 22     | Mov a value into a register          | mov            | mov fr             | no       |
 
 
 # Code Implementation

@@ -257,13 +257,10 @@ class AssemblerV2:
                 location :int = self.memory._alloc(Segment.CODE, len(opcodes))
                 self.memory.write_array(Segment.CODE, location, opcodes)
                 self.symbol_map.update_symbol(label_name, location)
-                dbg(opcodes)
-                pass
             elif self.blocktypes[i] == BlockType.CODE:
                 opcodes = self.block2opcode(block)
                 location :int = self.memory._alloc(Segment.CODE, len(opcodes))
                 self.memory.write_array(Segment.CODE, location, opcodes)
-                dbg(opcodes)
                 pass
             else:
                 pass
