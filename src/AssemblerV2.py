@@ -221,15 +221,15 @@ class AssemblerV2:
     
     # convert a block into a list of opcodes and instructions
     def block2opcode(self, block :List[str]) -> List[int]:
-        opcodes = []
+        block_opcodes = []
         for i,line in enumerate(block):
+            line_opcodes = []
             tokens = self.tokenize_line(line)
             tokens = self.remove_comma(tokens)
-            dbg(tokens)
             inst :Instruction = self.token2instruction(tokens[0])
             dbgassert((len(tokens) -1) == inst.nargs, f"Instruction {tokens[0]} expected {inst.nargs} arguments, but only {len(tokens) - 1} were given")
             if len(tokens) > 1:
-                opcodes.append(self.instruction2opcode(tokens[0]))
+                line_opcodes.append(self.instruction2opcode(tokens[0]))
                 argtypes = []
                 argvalues = []
                 # argument checker and operand type writing
@@ -241,12 +241,12 @@ class AssemblerV2:
                         argtypes.append(typ.value)
                         argvalues.append(self.arg2opcode(typ, tokens[j]))
                         
-                opcodes.extend(argtypes)
-                opcodes.extend(argvalues)
+                line_opcodes.extend(argtypes)
+                line_opcodes.extend(argvalues)
             else:
-                opcodes.append(self.instruction2opcode(tokens[0]))
-                
-            return opcodes
+                line_opcodes.append(self.instruction2opcode(tokens[0]))
+            block_opcodes.extend(line_opcodes)
+        return block_opcodes
 
         
     def process_code_blocks(self):
@@ -258,6 +258,7 @@ class AssemblerV2:
                 self.memory.write_array(Segment.CODE, location, opcodes)
                 self.symbol_map.update_symbol(label_name, location)
             elif self.blocktypes[i] == BlockType.CODE:
+                #dbg(block)
                 opcodes = self.block2opcode(block)
                 location :int = self.memory._alloc(Segment.CODE, len(opcodes))
                 self.memory.write_array(Segment.CODE, location, opcodes)

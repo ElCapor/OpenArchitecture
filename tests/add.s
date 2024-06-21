@@ -7,6 +7,8 @@ first_var: di 200
 I can be on multiple lines first
 then you can catch me;
 start:
+    MOV x0, 12
+    MOV x1, 14
     JMP end
 
 end:

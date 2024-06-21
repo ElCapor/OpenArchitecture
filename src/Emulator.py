@@ -34,6 +34,9 @@ class EmulatorV1:
                 self.regs[Register.PC] = label_location
                 self.regs[Register.AR] = self.regs[Register.PC]
                 return
+
+            case Instructions.MOV:
+                dbg("mov")
                 
         if not self.is_halted:
             self.regs[Register.PC] += (1 + instruction.value.nargs*2)
@@ -62,7 +65,7 @@ if __name__ == "__main__":
     assm :AssemblerV2 = AssemblerV2(args.filein)
     emu :EmulatorV1 = EmulatorV1(assm)
     print("================[MEMORY DUMP]==================")
-    print(emu.memory.hexdump(emu.memory.code.memory, 16, 0, 10))
+    print(emu.memory.hexdump(emu.memory.code.memory, 16, 0, 20))
     print(emu.memory.hexdump(emu.memory.data.memory, 16, 0, 10))
     print("================[Symbol Table]=================")
     emu.symbol_map.quick_dump()
