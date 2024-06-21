@@ -11,6 +11,10 @@ class SymbolMap():
         self.symbol_table :Dict[str, int] = {}
         # store the type of each symbol
         self.symbol_type :Dict[str, Symbol] = {}
+        
+    def quick_dump(self):
+        for i, symbol in enumerate(self.symbol_table):
+            print(f"{i} {symbol} = {self.symbol_table[symbol]}")
     
     def get_symbol_index(self, name :str) -> int:
         return list(self.symbol_table.keys()).index(name)
@@ -32,7 +36,7 @@ class SymbolMap():
             # labels are stored in code
             # return the start of the label code
             case Symbol.LABEL:
-                return self.mem[Segment.CODE][location]
+                return location
             # all of these are stored in data segment
             case Symbol.INTEGER | Symbol.SHORT | Symbol.DOUBLE | Symbol.BYTE | Symbol.STRING:
                 return self.mem[Segment.DATA][location]

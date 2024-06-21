@@ -9,7 +9,6 @@ then you can catch me;
 start:
     HALT
 
-MOV x1, 12 ; this will be never executed but you can keep it ;
-
 end:
+    MOV x0, 12
     HALT

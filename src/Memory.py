@@ -156,6 +156,24 @@ class Memory:
         self.write_array(segment, block, [0xCC for i in range(size)]) # OxCC means the block is reserved
         return block
     
+
+    def hexdump(self, memory, width=16, index=0, max_size=None):
+        def chunker(seq, size):
+            return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
+        if max_size is not None:
+            memory = memory[index:index + max_size]
+        else:
+            memory = memory[index:]
+
+        lines = []
+        for i, chunk in enumerate(chunker(memory, width)):
+            hex_values = ' '.join(f'{byte:02X}' for byte in chunk)
+            ascii_values = ''.join(chr(byte) if 32 <= byte <= 126 else '.' for byte in chunk)
+            lines.append(f'{index + i * width:08X}  {hex_values:<{width * 3}}  {ascii_values}')
+
+        return '\n'.join(lines)
+    
 def UnitTestMemory():
     mem :Memory = Memory()
     mem.write_array(Segment.DATA, 0, [10, 30, 45, 78])
