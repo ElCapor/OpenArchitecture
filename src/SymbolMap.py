@@ -39,7 +39,7 @@ class SymbolMap():
                 return location
             # all of these are stored in data segment
             case Symbol.INTEGER | Symbol.SHORT | Symbol.DOUBLE | Symbol.BYTE | Symbol.STRING:
-                return self.mem[Segment.DATA][location]
+                return location
     
     def update_symbol(self, name :str, newvalue : int):
         self.symbol_table[name] = newvalue

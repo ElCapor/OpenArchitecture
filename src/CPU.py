@@ -21,6 +21,14 @@ class Symbol(Enum):
     LABEL, BYTE, SHORT, INTEGER, DOUBLE, STRING = range(0,6)
 
 class Operand(IntFlag):
+    @staticmethod
+    def from_value(value :int):
+        for tType in Operand:
+            if tType.value == value:
+                return tType
+        return Operand.NONE
+    
+    NONE = 0
     REGISTER = 1 << 0  # 1
     INTEGER  = 1 << 1  # 2
     VALUE    = 1 << 2  # 4
@@ -72,8 +80,15 @@ class Registers:
     def __init__(self):
         self.regs :List[int] = [0 for i in range(0, len(Register))]
     
-    def __getitem__(self, register :Register) -> int:
-        return self.regs[register.value]
+    def __getitem__(self, register :Register | int) -> int:
+        if isinstance(register, Register):
+            return self.regs[register.value]
+        elif isinstance(register, int):
+            return self.regs[register]
 
-    def __setitem__(self, register :Register, value :int) -> int:
-        self.regs[register.value] = value % (2**32)
+    def __setitem__(self, register :Register | int, value :int) -> int:
+        if isinstance(register, Register):
+            self.regs[register.value] = value % (2**32)
+        elif isinstance(register, int):
+            self.regs[register] = value % (2**32)
+        

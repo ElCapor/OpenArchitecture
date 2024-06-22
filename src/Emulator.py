@@ -19,6 +19,9 @@ class EmulatorV1:
         
         self.is_halted = False
     
+    def read_pc_offset(self, idx):
+        return self.memory[Segment.CODE][self.regs[Register.PC] + idx]
+    
     def execute(self, instruction):
         match instruction:
             case Instructions.NONE:
@@ -36,7 +39,19 @@ class EmulatorV1:
                 return
 
             case Instructions.MOV:
-                dbg("mov")
+                op_type1 :Operand = Operand.from_value(self.read_pc_offset(1))
+                op_type2 :Operand = Operand.from_value(self.read_pc_offset(2))
+                op1 :int = self.read_pc_offset(3)
+                op2 :int = self.read_pc_offset(4)
+                if op_type1 == Operand.REGISTER:
+                    reg :Register = Register.from_index(op1)
+                    if op_type2 == Operand.REGISTER or Operand.ADDRESS or Operand.INTEGER:
+                        self.regs[reg] = op2
+                    elif op_type2 == Operand.VALUE:
+                        location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op2))
+                        value = self.memory[Segment.DATA][location]
+                        self.regs[reg] = value
+
                 
         if not self.is_halted:
             self.regs[Register.PC] += (1 + instruction.value.nargs*2)
@@ -50,6 +65,11 @@ class EmulatorV1:
             dbg(f"Executing instruction {inst} at address {self.regs[Register.AR]}")
             inst :Enum[Instruction] = Instructions.from_index(inst)
             self.execute(inst)
+            
+        print("================[DUMP]=========================")
+        for i,value in enumerate(self.regs):
+            reg :Register = Register.from_index(i)
+            print(f"{reg.name} {value}")
         print("Halt = Exiting")
         exit()
         
@@ -70,5 +90,4 @@ if __name__ == "__main__":
     print("================[Symbol Table]=================")
     emu.symbol_map.quick_dump()
     print("================[CPU START]====================")
-    
     emu.cycle()
