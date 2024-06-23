@@ -61,6 +61,9 @@ class Instructions(Enum):
     HALT = Instruction()
     JMP = Instruction(1, [Operand.SYMBOL])
     MOV = Instruction(2, [Operand.ALL, Operand.ALL])
+    CMP = Instruction(2, [Operand.ALL, Operand.ALL])
+    PUSH = Instruction(1, [Operand.ALL])
+    POP = Instruction(1, [Operand.REGISTER])
     
 
 class Flag(Enum):

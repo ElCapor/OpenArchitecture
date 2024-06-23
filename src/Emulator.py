@@ -17,6 +17,8 @@ class EmulatorV1:
         self.regs[Register.PC] = 0
         self.regs[Register.AR] = 0
         
+        self.regs[Register.ST] = 0
+        
         self.is_halted = False
     
     def read_pc_offset(self, idx):
@@ -51,6 +53,30 @@ class EmulatorV1:
                         location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op2))
                         value = self.memory[Segment.DATA][location]
                         self.regs[reg] = value
+                        
+            case Instructions.PUSH:
+                op_type1 :Operand = Operand.from_value(self.read_pc_offset(1))
+                op1 :int = self.read_pc_offset(2)
+                match op_type1:
+                    case Operand.INTEGER | Operand.ADDRESS | Operand.SYMBOL:
+                        self.memory.write(Segment.STACK, self.regs[Register.ST], op1)
+                    case Operand.VALUE:
+                        location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op2))
+                        value = self.memory[Segment.DATA][location]
+                        self.memory.write(Segment.STACK, self.regs[Register.ST], value)
+                    case Operand.REGISTER:
+                        self.memory.write(Segment.STACK, self.regs[Register.ST], self.regs[Register.from_index(op1)])
+                        
+                self.regs[Register.ST] += 1
+                
+            case Instructions.POP:
+                op_type1 :Operand = Operand.from_value(self.read_pc_offset(1))
+                reg :Register = Register.from_index(self.read_pc_offset(2))
+                if op_type1 == Operand.REGISTER:
+                    self.regs[reg] = self.memory[Segment.STACK][self.regs[Register.ST] - 1]
+                    self.memory.write(Segment.STACK, self.regs[Register.ST] - 1, 0)
+                    self.regs[Register.ST] -= 1
+
 
                 
         if not self.is_halted:
