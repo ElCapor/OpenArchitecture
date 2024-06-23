@@ -44,7 +44,7 @@ class Instruction:
             size (int, optional): size of the instruction in bytes. Defaults to 1.
             nargs (int, optional): number of args for the instruction. Defaults to 0.
         """
-        self.size = 1 + nargs
+        self.size = 1 + nargs * 2
         self.nargs = nargs
         self.operand_types : List[Operand]= operand_types
         dbgassert(len(self.operand_types) == nargs, "You must specify allowed operand types")
@@ -64,6 +64,9 @@ class Instructions(Enum):
     CMP = Instruction(2, [Operand.ALL, Operand.ALL])
     PUSH = Instruction(1, [Operand.ALL])
     POP = Instruction(1, [Operand.REGISTER])
+    ADD = Instruction(2, [Operand.ALL, Operand.ALL])
+    SUB = Instruction(2, [Operand.ALL, Operand.ALL])
+    CALL = Instruction(1, [Operand.SYMBOL])
     
 
 class Flag(Enum):

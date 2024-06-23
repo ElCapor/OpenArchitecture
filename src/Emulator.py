@@ -43,16 +43,20 @@ class EmulatorV1:
             case Instructions.MOV:
                 op_type1 :Operand = Operand.from_value(self.read_pc_offset(1))
                 op_type2 :Operand = Operand.from_value(self.read_pc_offset(2))
+                dbg(op_type2.name)
                 op1 :int = self.read_pc_offset(3)
                 op2 :int = self.read_pc_offset(4)
                 if op_type1 == Operand.REGISTER:
                     reg :Register = Register.from_index(op1)
-                    if op_type2 == Operand.REGISTER or Operand.ADDRESS or Operand.INTEGER:
-                        self.regs[reg] = op2
-                    elif op_type2 == Operand.VALUE:
-                        location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op2))
-                        value = self.memory[Segment.DATA][location]
-                        self.regs[reg] = value
+                    match op_type2:
+                        case Operand.ADDRESS | Operand.INTEGER:
+                            self.regs[reg] = op2
+                        case Operand.REGISTER:
+                            self.regs[reg] = self.regs[Register.from_index(op2)]
+                        case Operand.VALUE:
+                            location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op2))
+                            value = self.memory[Segment.DATA][location]
+                            self.regs[reg] = value
                         
             case Instructions.PUSH:
                 op_type1 :Operand = Operand.from_value(self.read_pc_offset(1))
@@ -76,11 +80,56 @@ class EmulatorV1:
                     self.regs[reg] = self.memory[Segment.STACK][self.regs[Register.ST] - 1]
                     self.memory.write(Segment.STACK, self.regs[Register.ST] - 1, 0)
                     self.regs[Register.ST] -= 1
-
+                    
+            case Instructions.ADD:
+                op_type1 :Operand = Operand.from_value(self.read_pc_offset(1))
+                op_type2 :Operand = Operand.from_value(self.read_pc_offset(2))
+                op1 :int = self.read_pc_offset(3)
+                op2 :int = self.read_pc_offset(4)
+                if op_type1 == Operand.REGISTER:
+                    reg :Register = Register.from_index(op1)
+                    match op_type2:
+                        case Operand.ADDRESS | Operand.INTEGER:
+                            self.regs[reg] += op2
+                        case Operand.REGISTER:
+                            self.regs[reg] += self.regs[Register.from_index(op2)]
+                        case Operand.VALUE:
+                            location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op2))
+                            value = self.memory[Segment.DATA][location]
+                            self.regs[reg] += value
+            
+            case Instructions.SUB:
+                op_type1 :Operand = Operand.from_value(self.read_pc_offset(1))
+                op_type2 :Operand = Operand.from_value(self.read_pc_offset(2))
+                op1 :int = self.read_pc_offset(3)
+                op2 :int = self.read_pc_offset(4)
+                if op_type1 == Operand.REGISTER:
+                    reg :Register = Register.from_index(op1)
+                    match op_type2:
+                        case Operand.ADDRESS | Operand.INTEGER:
+                            self.regs[reg] -= op2
+                        case Operand.REGISTER:
+                            self.regs[reg] -= self.regs[Register.from_index(op2)]
+                        case Operand.VALUE:
+                            location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op2))
+                            value = self.memory[Segment.DATA][location]
+                            self.regs[reg] -= value
+                        
+            case Instructions.CALL:
+                op_type1 :Operand = Operand.from_value(self.read_pc_offset(1))
+                op1 = self.read_pc_offset(2)
+                if op_type1 == Operand.SYMBOL:
+                    location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op1))
+                    # begin a new stack frame
+                    self.memory.write(Segment.STACK, self.regs[Register.ST], self.regs[Register.PC] + Instructions.CALL.value.size) # save return address
+                    self.regs[Register.ST] += 1 # increase ST (aka simulate PUSH instruction)
+                    self.regs[Register.PC] = location
+                    self.regs[Register.AR] = self.regs[Register.PC] # = POP AR
+                return # skip the addition
 
                 
         if not self.is_halted:
-            self.regs[Register.PC] += (1 + instruction.value.nargs*2)
+            self.regs[Register.PC] += (instruction.value.size)
             self.regs[Register.AR] = self.regs[Register.PC]
         
     def cycle(self):
@@ -96,6 +145,11 @@ class EmulatorV1:
         for i,value in enumerate(self.regs):
             reg :Register = Register.from_index(i)
             print(f"{reg.name} {value}")
+            
+        print("================[MEMORY DUMP]==================")
+        print(self.memory.hexdump(self.memory.code.memory, 16, 0, 0x30))
+        print(self.memory.hexdump(self.memory.data.memory, 16, 0, 10))
+        print(self.memory.hexdump(self.memory.stack.memory, 16, 0, 10))
         print("Halt = Exiting")
         exit()
         
@@ -111,7 +165,7 @@ if __name__ == "__main__":
     assm :AssemblerV2 = AssemblerV2(args.filein)
     emu :EmulatorV1 = EmulatorV1(assm)
     print("================[MEMORY DUMP]==================")
-    print(emu.memory.hexdump(emu.memory.code.memory, 16, 0, 20))
+    print(emu.memory.hexdump(emu.memory.code.memory, 16, 0, 0x30))
     print(emu.memory.hexdump(emu.memory.data.memory, 16, 0, 10))
     print("================[Symbol Table]=================")
     emu.symbol_map.quick_dump()
