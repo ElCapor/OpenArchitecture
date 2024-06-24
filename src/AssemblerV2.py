@@ -4,7 +4,7 @@ from CPU import Register, Symbol, Instructions, Instruction, Operand
 from Memory import Memory, Segment
 from SymbolMap import SymbolMap
 from enum import Enum
-
+import os
 class BlockType(Enum):
     CODE, DATA, LABEL = range(0,3)
 
@@ -13,8 +13,14 @@ class BlockParser:
     """
     def __init__(self, filein):
         self.blocks :List[List[str]] = []
-        self.filein = filein
-        self.filedata :List[str] = self.parse_blocks()
+        self.filein :str = filein
+        self.filedata :List[str] = []
+        
+        if os.path.isfile(filein):
+            self.load_file()
+        else:
+            self.filedata = self.filein.splitlines()
+        self.parse_blocks()
         
     def strip_comments(self, block :List[str]):
         ret = []
@@ -36,32 +42,37 @@ class BlockParser:
             ret.append(line)
         return ret
     
-    def parse_blocks(self):
+    def load_file(self):
         try:
             with open(self.filein, 'r') as file:
-                lines = file.readlines()
-                
-                blocks = []
-                current_block = []
-
-                for line in lines:
-                    if not line.strip():
-                        if current_block:
-                            blocks.append(self.strip_comments(current_block))
-                            current_block = []
-                    else:
-                        current_block.append(line.strip())
-
-                # Add the last block if there is one
-                if current_block:
-                    blocks.append(self.strip_comments(current_block))
-
-                self.blocks = blocks
+                self.filedata = file.readlines()
                 file.close()
-            
         except FileNotFoundError:
             print(f"The file {self.filein} is not in scope.")
             exit()
+        
+    
+    def parse_blocks(self):
+        try:
+            blocks = []
+            current_block = []
+
+            for line in self.filedata:
+                if not line.strip():
+                    if current_block:
+                        blocks.append(self.strip_comments(current_block))
+                        current_block = []
+                else:
+                    current_block.append(line.strip())
+
+            # Add the last block if there is one
+            if current_block:
+                blocks.append(self.strip_comments(current_block))
+
+            self.blocks = blocks
+        except:
+            print("Block parser failed")            
+        
             
 class AssemblerV2:
     def __init__(self, file) -> None:
@@ -239,6 +250,7 @@ class AssemblerV2:
                     if typ.value & inst.operand_types[j-1]:
                         #dbg("Type check is cool asf today")
                         argtypes.append(typ.value)
+                        dbg(self.arg2opcode(typ, tokens[j]))
                         argvalues.append(self.arg2opcode(typ, tokens[j]))
                         
                 line_opcodes.extend(argtypes)
@@ -268,6 +280,7 @@ class AssemblerV2:
                 
     def process_blocks(self):
         self.guess_block_types()
+        dbg(self.blocktypes)
         self.process_symbol_blocks()
         self.process_code_blocks()
         """
@@ -278,7 +291,7 @@ class AssemblerV2:
             dbg(self.symbol_map.get_symbol_name_from_index(self.symbol_map.get_symbol_index(symbol)))
         """
         
-        
+
 import sys
 import argparse
 

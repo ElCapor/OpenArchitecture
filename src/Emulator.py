@@ -127,12 +127,36 @@ class EmulatorV1:
                     self.regs[Register.AR] = self.regs[Register.PC] # = POP AR
                 return # skip the addition
 
+            case Instructions.ASSERT:
+                op_type1 :Operand = Operand.from_value(self.read_pc_offset(1))
+                op_type2 :Operand = Operand.from_value(self.read_pc_offset(2))
+                dbg(op_type2.name)
+                op1 :int = self.read_pc_offset(3)
+                op2 :int = self.read_pc_offset(4)
+                if op_type1 == Operand.REGISTER:
+                    reg :Register = Register.from_index(op1)
+                    match op_type2:
+                        case Operand.ADDRESS | Operand.INTEGER:
+                            assert(self.regs[reg] == op2, f"{reg.name} is not equal to {op2}")
+                        case Operand.REGISTER:
+                            assert(self.regs[reg] == self.regs[Register.from_index(op2)], f"{reg.name} is not equal to {Register.from_index(op2).name} which is {self.regs[Register.from_index(op2)]}")
+                        case Operand.VALUE:
+                            location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op2))
+                            value = self.memory[Segment.DATA][location]
+                            assert(self.regs[reg] == value, f"{reg.name} is not equal to symbol {self.symbol_map.get_symbol_name_from_index(op2)} value {value}")
                 
         if not self.is_halted:
             self.regs[Register.PC] += (instruction.value.size)
             self.regs[Register.AR] = self.regs[Register.PC]
-        
+    
     def cycle(self):
+        while not self.is_halted:
+            inst :int = self.memory[Segment.CODE][self.regs[Register.AR]]
+            dbg(f"Executing instruction {inst} at address {self.regs[Register.AR]}")
+            inst :Enum[Instruction] = Instructions.from_index(inst)
+            self.execute(inst)
+            
+    def debug(self):
         while input("stop ? ") != "stop":
             if self.is_halted:
                 break
@@ -170,4 +194,4 @@ if __name__ == "__main__":
     print("================[Symbol Table]=================")
     emu.symbol_map.quick_dump()
     print("================[CPU START]====================")
-    emu.cycle()
+    emu.debug()

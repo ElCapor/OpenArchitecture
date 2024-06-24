@@ -1,2 +1,0 @@
-target assemble:
-    include+="add.s, final.s"

@@ -67,8 +67,8 @@ class Instructions(Enum):
     ADD = Instruction(2, [Operand.ALL, Operand.ALL])
     SUB = Instruction(2, [Operand.ALL, Operand.ALL])
     CALL = Instruction(1, [Operand.SYMBOL])
+    ASSERT = Instruction(2, [Operand.ALL, Operand.ALL])
     
-
 class Flag(Enum):
     S, ZF, PF, SF = range(0, 4)
     

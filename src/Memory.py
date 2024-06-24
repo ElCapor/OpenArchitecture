@@ -38,7 +38,7 @@ class DataSegment:
     def __init__(self, size :int):
         self.size = size
         self.memory :List[int] = [0 for i in range(0, size)]
-    
+            
     def __getitem__(self, index :int | slice):
         if isinstance(index, slice):
             if (index.step and index.step > 1):
@@ -87,7 +87,7 @@ class CodeSegment:
             self.memory[index] = value
         else:
             raise IndexError()
-        
+
 class Memory:
     def __init__(self, stack_size :int = 256, data_size :int = 1024, code_size :int = 4096) -> None:        
         self.stack = Stack(stack_size)
@@ -130,6 +130,8 @@ class Memory:
     
     def read_array(self, segment :Segment, index :int, size :int) -> List[int]:
         return self.__getitem__(segment)[index:index+size]
+            
+    # i can't keep allocating memory like this i need to change it and know all the writen bytess
     # returns a location in the given segment that has enough size
     def _alloc(self, segment :Segment, size :int):
         block = [0 for i in range(0, size)] # search block by blocks
