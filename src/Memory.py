@@ -38,7 +38,7 @@ class DataSegment:
     def __init__(self, size :int):
         self.size = size
         self.memory :List[int] = [0 for i in range(0, size)]
-            
+        
     def __getitem__(self, index :int | slice):
         if isinstance(index, slice):
             if (index.step and index.step > 1):

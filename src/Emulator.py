@@ -137,13 +137,13 @@ class EmulatorV1:
                     reg :Register = Register.from_index(op1)
                     match op_type2:
                         case Operand.ADDRESS | Operand.INTEGER:
-                            assert(self.regs[reg] == op2, f"{reg.name} is not equal to {op2}")
+                            assert self.regs[reg] == op2, (f"{reg.name} is not equal to {op2}")
                         case Operand.REGISTER:
-                            assert(self.regs[reg] == self.regs[Register.from_index(op2)], f"{reg.name} is not equal to {Register.from_index(op2).name} which is {self.regs[Register.from_index(op2)]}")
+                            assert self.regs[reg] == self.regs[Register.from_index(op2)], (f"{reg.name} is not equal to {Register.from_index(op2).name} which is {self.regs[Register.from_index(op2)]}")
                         case Operand.VALUE:
                             location = self.symbol_map.get_symbol(self.symbol_map.get_symbol_name_from_index(op2))
                             value = self.memory[Segment.DATA][location]
-                            assert(self.regs[reg] == value, f"{reg.name} is not equal to symbol {self.symbol_map.get_symbol_name_from_index(op2)} value {value}")
+                            assert self.regs[reg] == value, (f"{reg.name} is not equal to symbol {self.symbol_map.get_symbol_name_from_index(op2)} value {value}")
                 
         if not self.is_halted:
             self.regs[Register.PC] += (instruction.value.size)
